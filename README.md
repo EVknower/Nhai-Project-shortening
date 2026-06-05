@@ -1,97 +1,252 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🛡️ FaceGuard Offline
 
-# Getting Started
+**100% Offline · AES-256 Encrypted · On-Device AI · DPDP Act 2023 Compliant**
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+A production-ready facial recognition + liveness detection attendance system for Android 8+ and iOS 12+. All biometric processing happens on-device — zero cloud dependency for core functionality.
 
-## Step 1: Start Metro
+---
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## ✨ Features
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+| Feature | Details |
+|---------|---------|
+| **Face Recognition** | MobileFaceNet INT8 TFLite, 128-dim embeddings, cosine similarity |
+| **Liveness Detection** | EAR blink detection, MAR smile, head pose estimation |
+| **Security** | AES-256-CBC encrypted SQLite, PBKDF2 key derivation, device integrity checks |
+| **Offline-first** | Full functionality without internet; AWS sync is optional |
+| **Multi-angle Enrollment** | 5 angles (FRONT, LEFT, RIGHT, UP, DOWN) per employee |
+| **Sync Queue** | Exponential backoff, dead-letter handling, conflict resolution |
 
-```sh
-# Using npm
-npm start
+---
 
-# OR using Yarn
-yarn start
+## 🚀 Quick Start (5 minutes)
+
+### Prerequisites
+
+- Node.js 18+
+- React Native CLI (`npm install -g @react-native-community/cli`)
+- Android Studio (for Android) or Xcode 14+ (for iOS)
+- Python 3.9+ (optional, for model training scripts)
+
+### 1. Clone & Install
+
+```bash
+git clone <your-repo-url>
+cd FaceGuardOffline
+npm install --legacy-peer-deps
 ```
 
-## Step 2: Build and run your app
+### 2. Download ML Models
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+bash scripts/download_models.sh
 ```
 
-### iOS
+Place the model files in `src/models/`:
+- `face_mesh.tflite` (~3MB) — MediaPipe Face Landmarker
+- `mobile_face_net.tflite` (~5MB) — MobileFaceNet INT8
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### 3. Android
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+```bash
+# Start Metro bundler
+npx react-native start
 
-```sh
-bundle install
+# Run on device/emulator
+npx react-native run-android
 ```
 
-Then, and every time you update your native dependencies, run:
+### 4. iOS
 
-```sh
-bundle exec pod install
+```bash
+cd ios && pod install && cd ..
+npx react-native run-ios
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+---
 
-```sh
-# Using npm
-npm run ios
+## 📱 Using the App
 
-# OR using Yarn
-yarn ios
+1. **Launch** → Splash screen runs device integrity check + loads ML models (~1.5s)
+2. **Register Employee** → Fill name, code, department → Tap "Register & Enroll Face"
+3. **Face Enrollment** → Follow prompts: FRONT → LEFT → RIGHT → UP → DOWN (auto-capture)
+4. **Mark Attendance** → Tap "Tap to Scan" → Face detected → Complete liveness challenge
+5. **Records** → View all attendance records, filter by status/date
+6. **Sync** → Tap "Sync Now" when online to push records to AWS
+
+---
+
+## 🧪 Testing
+
+```bash
+# All tests
+npm test
+
+# With coverage report
+npm test -- --coverage
+
+# Single test file
+npm test FaceMatchingService
+
+# Watch mode
+npm test -- --watch
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Test Coverage
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+| Module | Tests |
+|--------|-------|
+| `cosineDistance` | Similarity, orthogonal, opposite, zero vectors |
+| `FaceMatchingService` | Match threshold, multi-candidate, confidence levels |
+| `LivenessService` | EAR calculation, challenge generation, action detection |
+| `EmployeeRepository` | CRUD, soft delete, mark synced |
+| `AttendanceFlow` | Full integration: register→enroll→match→record |
 
-## Step 3: Modify your app
+---
 
-Now that you have successfully run the app, let's make changes!
+## 🤖 ML Models
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+### MobileFaceNet (Embedding Model)
+- Architecture: 22 depthwise separable conv layers
+- Input: 112×112×3 normalized face image
+- Output: 128-dimensional L2-normalized embedding
+- Quantization: INT8 (reduces size ~4×, minimal accuracy loss)
+- Target size: ~4.8MB
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+### MediaPipe Face Mesh (Detection Model)
+- 468 facial landmarks with 3D coordinates
+- Used for: face detection, eye/mouth landmarks, head pose estimation
+- Target size: ~3MB
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+**Total model budget: < 20MB** ✅
 
-## Congratulations! :tada:
+### Training Your Own Model
 
-You've successfully run and modified your React Native App. :partying_face:
+```bash
+# Prepare your dataset in:
+# weights/mobilefacenet_asia.h5 (trained weights)
 
-### Now what?
+python scripts/train_mobilefacenet.py
+```
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+---
 
-# Troubleshooting
+## 🔒 Security Architecture
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+```
+Camera Frame
+    │
+    ▼
+Face Detection (MediaPipe)
+    │ 468 landmarks
+    ▼
+ROI Extraction + Alignment
+    │ 112×112 face crop
+    ▼
+MobileFaceNet Inference
+    │ 128-dim embedding
+    ▼
+Cosine Similarity Match
+    │ vs encrypted DB embeddings
+    ▼
+Liveness Challenge
+    │ Blink/Smile/Turn
+    ▼
+Attendance Record
+    │ AES-256 encrypted SQLite
+    ▼
+Sync Queue (offline-first)
+    │ Exponential backoff
+    ▼
+AWS API (optional)
+```
 
-# Learn More
+### Key Security Properties
 
-To learn more about React Native, take a look at the following resources:
+- **Encryption**: AES-256-CBC with random IV per record
+- **Key Storage**: PBKDF2 (100k iterations) derived key in Android Keystore / iOS Secure Enclave
+- **Device Integrity**: Root detection, emulator detection, app bundle validation
+- **Liveness**: Prevents photo/video spoofing via behavioral biometrics
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+AWS_API_ENDPOINT=https://your-api.execute-api.ap-south-1.amazonaws.com/prod
+APP_VERSION=1.0.0
+```
+
+### Recognition Thresholds
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| Match Threshold | 0.75 | 0.60–0.95 | Cosine similarity required for a match |
+| Liveness Required | ON | — | Require challenge completion |
+
+Adjust these in **Settings** → **Recognition Settings**.
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── types/          # TypeScript interfaces
+├── database/       # SQLite manager + 4 repositories
+│   ├── migrations/ # Versioned schema migrations
+│   └── repositories/
+├── services/       # Business logic
+│   ├── EncryptionService.ts
+│   ├── LivenessService.ts
+│   ├── FaceMatchingService.ts
+│   ├── DeviceIntegrityService.ts
+│   └── SyncService.ts
+├── ml/             # TFLite model wrappers
+│   ├── ModelLoader.ts
+│   ├── FaceDetector.ts
+│   └── EmbeddingExtractor.ts
+├── hooks/          # React hooks
+├── screens/        # 9 UI screens
+├── navigation/     # Stack + Tab navigator
+└── utils/          # Logger, cosine math, frame processing
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| `tflite model not found` | Run `bash scripts/download_models.sh` |
+| `camera permission denied` | Check AndroidManifest / Info.plist permissions |
+| `SQLite not opening` | Check `react-native-sqlite-storage` native link |
+| `metro can't resolve .tflite` | Ensure `tflite` is in `assetExts` in `metro.config.js` |
+| `crypto-js encrypt undefined` | Import as `import CryptoJS from 'crypto-js'` |
+| `pod install fails` | Run `cd ios && pod deintegrate && pod install` |
+| `npm install fails` | Use `npm install --legacy-peer-deps` |
+
+---
+
+## 📋 DPDP Act 2023 Compliance
+
+- ✅ All biometric data stored exclusively on-device
+- ✅ AES-256 encryption for biometric embeddings
+- ✅ No raw face images stored — only mathematical embeddings
+- ✅ Employee consent required before enrollment
+- ✅ Data deletion available via Settings → Clear All Data
+- ✅ Audit trail for all attendance records
+
+---
+
+## 📄 License
+
+MIT — See LICENSE file.
+
+---
+
+*FaceGuard Offline — Production-Ready · Hackathon-Winning · 100% Offline AI*
