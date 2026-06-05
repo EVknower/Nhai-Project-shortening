@@ -52,7 +52,7 @@ const FaceEnrollmentScreen: React.FC<Props> = ({navigation, route}) => {
   const [countdown, setCountdown] = useState(3);
   const [autoCapturing, setAutoCapturing] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const countdownRef = useRef<NodeJS.Timeout>();
+  const countdownRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const currentAngle = EMBEDDING_ANGLES[currentAngleIndex];
 
@@ -94,9 +94,7 @@ const FaceEnrollmentScreen: React.FC<Props> = ({navigation, route}) => {
     ]).start();
 
     try {
-      const photo = await cameraRef.current.takePhoto({
-        qualityPrioritization: 'quality',
-      });
+      const photo = await cameraRef.current.takePhoto({});
 
       // For now store a placeholder — real impl would decode JPEG to Uint8Array
       const mockFrameData = new Uint8Array(112 * 112 * 3);
@@ -236,6 +234,7 @@ const FaceEnrollmentScreen: React.FC<Props> = ({navigation, route}) => {
             style={StyleSheet.absoluteFill}
             device={device}
             isActive={isCameraActive && !isEnrolling}
+            photo={true}
           />
           {/* Face oval guide */}
           <View style={styles.ovalGuide} />

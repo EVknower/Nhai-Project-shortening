@@ -17,6 +17,7 @@ let mockAttendance: AttendanceRecord[] = [];
 let mockSyncQueue: any[] = [];
 
 jest.mock('../../src/database/repositories/EmployeeRepository', () => ({
+  __esModule: true,
   default: {
     create: jest.fn(async (input: any) => {
       const emp: Employee = {
@@ -36,6 +37,7 @@ jest.mock('../../src/database/repositories/EmployeeRepository', () => ({
 }));
 
 jest.mock('../../src/database/repositories/EmbeddingRepository', () => ({
+  __esModule: true,
   default: {
     save: jest.fn(async (embedding: any, employeeId: string) => {
       if (!mockEmbeddings[employeeId]) {
@@ -55,6 +57,7 @@ jest.mock('../../src/database/repositories/EmbeddingRepository', () => ({
 }));
 
 jest.mock('../../src/database/repositories/AttendanceRepository', () => ({
+  __esModule: true,
   default: {
     record: jest.fn(async (input: any) => {
       const record: AttendanceRecord = {
@@ -72,6 +75,7 @@ jest.mock('../../src/database/repositories/AttendanceRepository', () => ({
 }));
 
 jest.mock('../../src/database/repositories/SyncQueueRepository', () => ({
+  __esModule: true,
   default: {
     enqueue: jest.fn(async (...args: any[]) => { mockSyncQueue.push(args); }),
     getPendingCount: jest.fn(async () => mockSyncQueue.length),
@@ -80,18 +84,22 @@ jest.mock('../../src/database/repositories/SyncQueueRepository', () => ({
 
 // Mock ML models with deterministic outputs
 jest.mock('../../src/ml/ModelLoader', () => ({
+  __esModule: true,
   default: {
     getInstance: () => ({
       getFaceMeshModel: () => ({
-        run: () => ({
-          landmarks: new Float32Array(468 * 3).fill(0.5),
-          confidence: 0.95,
-        }),
+        run: async () => [
+          new Float32Array(468 * 3).fill(0.5),
+          new Float32Array([0.95]),
+        ],
       }),
       getEmbeddingModel: () => ({
-        run: (_inputs: any) => ({
-          output: l2Normalize(new Float32Array(128).fill(1 / Math.sqrt(128))),
-        }),
+        run: async (_inputs: any) => {
+          const {l2Normalize: localL2Normalize} = require('../../src/utils/cosineDistance');
+          return [
+            localL2Normalize(new Float32Array(192).fill(1 / Math.sqrt(192))),
+          ];
+        },
       }),
       isLoaded: true,
     }),
@@ -99,6 +107,7 @@ jest.mock('../../src/ml/ModelLoader', () => ({
 }));
 
 jest.mock('../../src/services/EncryptionService', () => ({
+  __esModule: true,
   default: {
     getInstance: () => ({
       encryptEmbedding: (v: Float32Array) => JSON.stringify(Array.from(v)),
@@ -144,7 +153,7 @@ describe('Full Attendance Flow Integration Test', () => {
     // Step 2: Enroll 5 embeddings (one per angle)
     const angles = ['FRONT', 'LEFT', 'RIGHT', 'UP', 'DOWN'] as const;
     for (const angle of angles) {
-      const vector = l2Normalize(new Float32Array(128).fill(1 / Math.sqrt(128)));
+      const vector = l2Normalize(new Float32Array(192).fill(1 / Math.sqrt(192)));
       await EmbeddingRepository.save({vector, angle}, employee.id);
     }
 
@@ -157,7 +166,7 @@ describe('Full Attendance Flow Integration Test', () => {
     expect(allCandidates[0].employeeId).toBe('emp-test-001');
 
     // Probe = same as stored = perfect match
-    const probe = l2Normalize(new Float32Array(128).fill(1 / Math.sqrt(128)));
+    const probe = l2Normalize(new Float32Array(192).fill(1 / Math.sqrt(192)));
     const matchResult = service.matchEmployee(probe, allCandidates);
 
     expect(matchResult).not.toBeNull();

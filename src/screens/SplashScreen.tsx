@@ -86,7 +86,7 @@ const SplashScreen: React.FC<Props> = ({navigation}) => {
 
       // Navigate after brief delay
       setTimeout(() => {
-        navigation.replace('Main');
+        navigation.replace('Main', {screen: 'Home'});
       }, 500);
     } catch (error) {
       logger.error('Init error:', error);

@@ -51,7 +51,7 @@ const LivenessChallengeScreen: React.FC<Props> = ({navigation, route}) => {
 
   const [timeLeft, setTimeLeft] = useState(CHALLENGE_TIMEOUT);
   const [isRecording, setIsRecording] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const successAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1)).current;
 

@@ -10,6 +10,6 @@ module.exports = {
         },
       },
     ],
-    'react-native-reanimated/plugin', // Must be last
+    'react-native-worklets/plugin', // Must be last
   ],
 };

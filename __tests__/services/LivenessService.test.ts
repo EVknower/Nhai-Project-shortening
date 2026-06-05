@@ -3,20 +3,16 @@ import {Landmark} from '../../src/types/LivenessChallenge';
 
 // Helper: create a landmark array for eye aspect ratio tests
 function makeEyeLandmarks(ear: number): Landmark[] {
-  // EAR = (||p2-p6|| + ||p3-p5||) / (2 * ||p1-p4||)
-  // Set up landmarks so EAR = desired value
-  // p1=(0,0), p4=(1,0) → h=1
-  // p2=(0.25, ear/2), p6=(0.75, ear/2) → v1 = ear/2 + ear/2 = ear... simplified
   const h = 1.0;
-  const v = ear * h; // ear = v / h
+  const v = ear;
 
   return [
-    {x: 0, y: 0, z: 0},       // p1 (left corner)
-    {x: 0.25, y: v / 2, z: 0}, // p2
-    {x: 0.5, y: v, z: 0},      // p3
-    {x: h, y: 0, z: 0},        // p4 (right corner)
-    {x: 0.75, y: v / 2, z: 0}, // p5
-    {x: 0.25, y: v / 2, z: 0}, // p6
+    {x: 0.0, y: 0.0, z: 0},    // p1 (left corner)
+    {x: 0.33, y: v / 2, z: 0},  // p2
+    {x: 0.67, y: v / 2, z: 0},  // p3
+    {x: h, y: 0.0, z: 0},       // p4 (right corner)
+    {x: 0.67, y: -v / 2, z: 0}, // p5
+    {x: 0.33, y: -v / 2, z: 0}, // p6
   ];
 }
 

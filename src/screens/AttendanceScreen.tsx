@@ -43,7 +43,7 @@ const AttendanceScreen: React.FC<Props> = ({navigation}) => {
     type: string;
   } | null>(null);
   const isProcessing = useRef(false);
-  const scanIntervalRef = useRef<NodeJS.Timeout>();
+  const scanIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   const startGlowAnimation = () => {
@@ -75,18 +75,18 @@ const AttendanceScreen: React.FC<Props> = ({navigation}) => {
       }
 
       // Generate mock probe embedding for demonstration
-      const mockProbe = new Float32Array(128);
-      for (let i = 0; i < 128; i++) {
+      const mockProbe = new Float32Array(192);
+      for (let i = 0; i < 192; i++) {
         mockProbe[i] = Math.random() * 2 - 1;
       }
 
       // Normalize
       let norm = 0;
-      for (let i = 0; i < 128; i++) {
+      for (let i = 0; i < 192; i++) {
         norm += mockProbe[i] * mockProbe[i];
       }
       norm = Math.sqrt(norm);
-      for (let i = 0; i < 128; i++) {
+      for (let i = 0; i < 192; i++) {
         mockProbe[i] /= norm;
       }
 
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     maxHeight: 420,
   },
   scanOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

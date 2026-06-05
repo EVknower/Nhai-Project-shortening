@@ -33,9 +33,9 @@ describe('cosineSimilarity', () => {
     expect(() => cosineSimilarity(a, b)).toThrow();
   });
 
-  it('correctly computes similarity for 128-dim vectors', () => {
-    const a = new Float32Array(128).fill(1 / Math.sqrt(128));
-    const b = new Float32Array(128).fill(1 / Math.sqrt(128));
+  it('correctly computes similarity for 192-dim vectors', () => {
+    const a = new Float32Array(192).fill(1 / Math.sqrt(192));
+    const b = new Float32Array(192).fill(1 / Math.sqrt(192));
     expect(cosineSimilarity(a, b)).toBeCloseTo(1.0, 4);
   });
 });
@@ -46,8 +46,8 @@ describe('FaceMatchingService.matchEmployee', () => {
   const service = FaceMatchingService.getInstance();
 
   function makeNormalizedVector(seed: number): Float32Array {
-    const v = new Float32Array(128);
-    for (let i = 0; i < 128; i++) {
+    const v = new Float32Array(192);
+    for (let i = 0; i < 192; i++) {
       v[i] = Math.sin(seed + i);
     }
     return l2Normalize(v);
@@ -65,17 +65,17 @@ describe('FaceMatchingService.matchEmployee', () => {
   });
 
   it('returns null when best similarity is below threshold (0.74)', () => {
-    const probe = new Float32Array(128).fill(1 / Math.sqrt(128));
+    const probe = new Float32Array(192).fill(1 / Math.sqrt(192));
     // Create an orthogonal-ish vector
-    const stored = new Float32Array(128);
-    for (let i = 0; i < 128; i++) {
-      stored[i] = i < 64 ? 1 / Math.sqrt(64) : 0;
+    const stored = new Float32Array(192);
+    for (let i = 0; i < 192; i++) {
+      stored[i] = i < 96 ? 1 / Math.sqrt(96) : 0;
     }
     const candidates = [
       {employeeId: 'emp-2', embeddings: [stored]},
     ];
     const result = service.matchEmployee(probe, candidates);
-    // Similarity will be ~0.5 (below 0.75)
+    // Similarity will be ~0.707 (below 0.75)
     expect(result).toBeNull();
   });
 

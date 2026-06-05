@@ -1,8 +1,27 @@
 import {logger} from '../utils/logger';
 
-// react-native-fast-tflite types
-interface TFLiteModel {
-  run(inputs: Record<string, any>): Record<string, any>;
+export interface Tensor {
+  name: string;
+  dataType: string;
+  shape: number[];
+}
+
+export type TypedArray =
+  | Float32Array
+  | Float64Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array;
+
+// react-native-fast-tflite types compatible interface
+export interface TFLiteModel {
+  run(input: TypedArray[]): Promise<TypedArray[]>;
+  runSync(input: TypedArray[]): TypedArray[];
+  inputs: Tensor[];
+  outputs: Tensor[];
 }
 
 // Lazy imports to avoid module-level failures on unsupported platforms
@@ -57,6 +76,11 @@ class ModelLoader {
         ]);
         this.faceMeshModel = mesh;
         this.embeddingModel = net;
+
+        logger.info('Face Mesh Model Inputs: ' + JSON.stringify(mesh.inputs));
+        logger.info('Face Mesh Model Outputs: ' + JSON.stringify(mesh.outputs));
+        logger.info('Embedding Model Inputs: ' + JSON.stringify(net.inputs));
+        logger.info('Embedding Model Outputs: ' + JSON.stringify(net.outputs));
       } else {
         // Mock models for JS-only testing
         this.faceMeshModel = this.createMockModel('face_mesh');
@@ -78,23 +102,49 @@ class ModelLoader {
   }
 
   private createMockModel(name: string): TFLiteModel {
+    const inputs: Tensor[] = [];
+    const outputs: Tensor[] = [];
+    if (name === 'face_mesh') {
+      inputs.push({ name: 'input', dataType: 'float32', shape: [1, 192, 192, 3] });
+      outputs.push({ name: 'landmarks', dataType: 'float32', shape: [1, 1404] });
+    } else {
+      inputs.push({ name: 'input', dataType: 'float32', shape: [1, 112, 112, 3] });
+      outputs.push({ name: 'output', dataType: 'float32', shape: [1, 128] });
+    }
+
     return {
-      run: (inputs: Record<string, any>) => {
-        logger.debug(`Mock model ${name} running`);
-        // Return plausible mock data
+      inputs,
+      outputs,
+      run: async (input: TypedArray[]) => {
+        logger.debug(`Mock model ${name} running (async)`);
         if (name === 'mobile_face_net') {
           const embedding = new Float32Array(128);
           for (let i = 0; i < 128; i++) {
             embedding[i] = Math.random() * 2 - 1;
           }
-          return {output: embedding};
+          return [embedding];
         }
         // Face mesh: 468 landmarks
         const landmarks = new Float32Array(468 * 3);
         for (let i = 0; i < landmarks.length; i++) {
           landmarks[i] = Math.random();
         }
-        return {landmarks};
+        return [landmarks];
+      },
+      runSync: (input: TypedArray[]) => {
+        logger.debug(`Mock model ${name} running (sync)`);
+        if (name === 'mobile_face_net') {
+          const embedding = new Float32Array(128);
+          for (let i = 0; i < 128; i++) {
+            embedding[i] = Math.random() * 2 - 1;
+          }
+          return [embedding];
+        }
+        const landmarks = new Float32Array(468 * 3);
+        for (let i = 0; i < landmarks.length; i++) {
+          landmarks[i] = Math.random();
+        }
+        return [landmarks];
       },
     };
   }

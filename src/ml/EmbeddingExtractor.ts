@@ -20,8 +20,12 @@ class EmbeddingExtractor {
   async extract(faceROI: Float32Array): Promise<Float32Array> {
     try {
       const model = ModelLoader.getInstance().getEmbeddingModel();
-      const output = model.run({input: faceROI});
-      const rawEmbedding = output.output as Float32Array;
+      // Run model asynchronously
+      const outputs = await model.run([faceROI]);
+      const rawEmbedding = outputs[0] as Float32Array;
+      if (!rawEmbedding) {
+        throw new Error('No embedding returned from model');
+      }
       // L2-normalize the output
       return l2Normalize(rawEmbedding);
     } catch (error) {

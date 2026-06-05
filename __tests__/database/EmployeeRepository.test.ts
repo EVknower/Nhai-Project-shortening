@@ -10,10 +10,11 @@ const mockQuery = jest.fn();
 const mockExecute = jest.fn();
 
 jest.mock('../../src/database/DatabaseManager', () => ({
+  __esModule: true,
   default: {
     getInstance: () => ({
-      query: mockQuery,
-      execute: mockExecute,
+      query: (...args: any[]) => mockQuery(...args),
+      execute: (...args: any[]) => mockExecute(...args),
     }),
   },
 }));

@@ -9,7 +9,7 @@ import {shouldProcessFrame} from '../utils/frameProcessor';
 import {logger} from '../utils/logger';
 
 export interface UseCameraReturn {
-  cameraRef: React.RefObject<InstanceType<typeof Camera>>;
+  cameraRef: React.RefObject<Camera | null>;
   device: ReturnType<typeof useCameraDevice>;
   hasPermission: boolean;
   isPermissionGranted: boolean;
